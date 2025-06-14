@@ -1,9 +1,11 @@
 import "../css/main.css";
 import { useAuth } from "../context/authContext";
+import { auth } from "../firebase/firebase";
+import { deleteUser } from "firebase/auth";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { deleteUser } from "../utils/auth";
+import { deleteUserFromMockApi } from "../utils/auth";
 import { useNavigate } from "react-router-dom";
 import { DeleteOutlined, EditOutlined, PlusOutlined, LogoutOutlined } from '@ant-design/icons';
 import { Button, Pagination, Input, Select } from 'antd';
@@ -57,12 +59,19 @@ function Main() {
         }
     };
 
-    const deleteCurrentUser = async (uid) => {
+    const deleteCurrentUser = async () => {
         const confirmDelete = window.confirm('Вы уверены, что хотите удалить свой аккаунт?');
         if (!confirmDelete) return;
 
+        const firebaseUser = auth.currentUser;
+        if (!firebaseUser) {
+            toast.error("Пользователь в Firebase не найден");
+            return;
+        }
+
         try {
-            await deleteUser(uid);
+            await deleteUserFromMockApi(firebaseUser.uid);
+            await deleteUser(firebaseUser);
             toast.success("Ваш аккаунт удалён");
             logout();
             navigate('/login');
@@ -71,6 +80,7 @@ function Main() {
             toast.error("Не удалось удалить аккаунт");
         }
     };
+
 
     const addContact = async (contact) => {
         try {
@@ -161,7 +171,7 @@ function Main() {
                         <Button
                             type="primary"
                             onClick={() => setIsProfileModalOpen(true)} s
-                            style={{ marginTop: 5 }}
+                            style={{ marginTop: 5, marginLeft: 10 }}
                             icon={<EditOutlined />}
                         >
                             Редактировать профиль

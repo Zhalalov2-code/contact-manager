@@ -1,4 +1,6 @@
 import { createContext, useContext, useState, useEffect } from "react";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { auth } from "../firebase/firebase"; 
 import { toast } from "react-toastify";
 
 const AuthContext = createContext();
@@ -8,11 +10,20 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("authUser");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setLoading(false);
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
+        const storedUser = localStorage.getItem("authUser");
+        if (storedUser) {
+          setUser(JSON.parse(storedUser));
+        }
+      } else {
+        setUser(null);
+        localStorage.removeItem("authUser");
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const login = (userData) => {
@@ -21,14 +32,15 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
+    signOut(auth);
     localStorage.removeItem("authUser");
     setUser(null);
-    toast.success('Вы вышли из аккаунта')
+    toast.success("Вы вышли из аккаунта");
   };
 
   return (
     <AuthContext.Provider value={{ user, login, logout, loading }}>
-      {children}
+      {!loading && children}
     </AuthContext.Provider>
   );
 };
