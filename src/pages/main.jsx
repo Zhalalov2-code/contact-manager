@@ -28,6 +28,7 @@ function Main() {
     const pageSize = 12;
     const { Option } = Select;
     const [selectedContact, setSelectedContact] = useState(null);
+    const filter = (str) => (str || '').toLowerCase().trim();
 
 
     const fetchContact = async () => {
@@ -94,6 +95,7 @@ function Main() {
         }
     };
 
+
     const updateContact = async (contact) => {
         try {
             const response = await axios.put(`https://6849c29445f4c0f5ee72c1a0.mockapi.io/contacts/${contact.id}`, contact);
@@ -119,19 +121,42 @@ function Main() {
     };
 
     const filteredContacts = contacts
-        .filter(c => `${c.firstName} ${c.lastName}`.toLowerCase().includes(search.toLowerCase()) ||
-            c.email.toLowerCase().includes(search.toLowerCase()))
+        .filter(c => {
+            const fullname = filter(`${c.firstName} ${c.lastName}`);
+            const email = filter(c.email);
+            const phone = filter(c.phone);
+            const searchValue = filter(search);
+
+            return (
+                fullname.includes(searchValue) ||
+                email.includes(searchValue) ||
+                phone.includes(searchValue)
+            );
+        })
         .sort((a, b) => {
-            if (sortType === "name-asc") {
-                return a.firstName.localeCompare(b.firstName);
-            } else if (sortType === "name-desc") {
-                return b.firstName.localeCompare(a.firstName);
-            } else if (sortType === "date-asc") {
-                return new Date(a.createdAt) - new Date(b.createdAt);
-            } else if (sortType === "date-desc") {
-                return new Date(b.createdAt) - new Date(a.createdAt);
-            } else {
-                return 0;
+            switch (sortType) {
+                case "name-asc":
+                    return a.firstName.localeCompare(b.firstName);
+                case "name-desc":
+                    return b.firstName.localeCompare(a.firstName);
+                case "lastName-asc":
+                    return a.lastName.localeCompare(b.lastName);
+                case "lastName-desc":
+                    return b.lastName.localeCompare(a.lastName);
+                case "email-asc":
+                    return a.email.localeCompare(b.email);
+                case "email-desc":
+                    return b.email.localeCompare(a.email);
+                case "phone-asc":
+                    return a.phone.localeCompare(b.phone);
+                case "phone-desc":
+                    return b.phone.localeCompare(a.phone);
+                case "date-asc":
+                    return new Date(a.createdAt) - new Date(b.createdAt);
+                case "date-desc":
+                    return new Date(b.createdAt) - new Date(a.createdAt);
+                default:
+                    return 0;
             }
         });
 
@@ -198,6 +223,12 @@ function Main() {
                             <Option value="">Без сортировки</Option>
                             <Option value="name-asc">Имя: A → Z</Option>
                             <Option value="name-desc">Имя: Z → A</Option>
+                            <Option value="lastName-asc">Фамилия: A → Z</Option>
+                            <Option value="lastName-desc">Фамилия: Z → A</Option>
+                            <Option value="email-asc">Email: A → Z</Option>
+                            <Option value="email-desc">Email: Z → A</Option>
+                            <Option value="phone-asc">Телефон: A → Z</Option>
+                            <Option value="phone-desc">Телефон: Z → A</Option>
                             <Option value="date-asc">Дата: Старые → Новые</Option>
                             <Option value="date-desc">Дата: Новые → Старые</Option>
                         </Select>

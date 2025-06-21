@@ -38,7 +38,7 @@ function Register() {
       newErrors.email = "Некорректный email";
     }
 
-    if (!/^\d{10,}$/.test(form.phone)) {
+    if (!/^\d{7,10}$/.test(form.phone)) {
       newErrors.phone = "Телефон должен содержать минимум 10 цифр";
     }
 

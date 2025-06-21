@@ -1,4 +1,6 @@
 import axios from "axios";
+import { auth } from "../firebase/firebase";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 
 const API_URL = "https://6849c29445f4c0f5ee72c1a0.mockapi.io/users";
 
@@ -20,10 +22,22 @@ export async function createGoogleUser(user) {
   return response.data;
 }
 
-export async function registerUser(user) {
-  const response = await axios.post(API_URL, user);
+export const registerUser = async (form) => {
+  const res = await createUserWithEmailAndPassword(auth, form.email, form.password);
+  const firebaseUser = res.user;
+
+  const newUser = {
+    uid: firebaseUser.uid,
+    firstName: form.firstName,
+    lastName: form.lastName,
+    email: form.email,
+    phone: form.phone,
+    avatar: form.avatar,
+    createdAt: new Date().toISOString(),
+  };
+  const response = await axios.post("https://6849c29445f4c0f5ee72c1a0.mockapi.io/users", newUser);
   return response.data;
-}
+};
 
 export async function deleteUserFromMockApi(uid) {
   const user = await getUserByUid(uid);

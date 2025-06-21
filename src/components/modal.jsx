@@ -1,63 +1,101 @@
-import { useEffect } from "react";
-import { Modal, Form, Input, Button } from "antd";
+import { Modal, Form, Input } from 'antd';
 
-const ContactModal = ({ onClose, onSubmit, contact = {} }) => {
+const ContactModal = ({ contact = {}, onSubmit, onClose }) => {
   const [form] = Form.useForm();
 
-  useEffect(() => {
-    form.setFieldsValue({
-      firstName: contact.firstName || "",
-      lastName: contact.lastName || "",
-      email: contact.email || "",
-      phone: contact.phone || "",
-      avatar: contact.avatar || "",
-    });
-  }, [contact, form]);
-
-  const handleFinish = (values) => {
-    onSubmit({ ...values, id: contact.id });
-    onClose();
+  const handleOk = () => {
+    form
+      .validateFields()
+      .then((values) => {
+        form.resetFields();
+        onSubmit({ ...contact, ...values });
+        onClose();
+      })
+      .catch((errorInfo) => {
+        console.log("Ошибка валидации:", errorInfo);
+      });
   };
 
   return (
     <Modal
-      title={contact.id ? "Редактировать контакт" : "Добавить контакт"}
-      visible={true}
-      onCancel={onClose}
-      footer={null}
+      title={contact?.id ? "Редактировать контакт" : "Добавить контакт"}
+      open={true}
+      onOk={handleOk}
+      onCancel={() => {
+        form.resetFields();
+        onClose();
+      }}
+      okText="Сохранить"
+      cancelText="Отмена"
     >
       <Form
         form={form}
         layout="vertical"
-        onFinish={handleFinish}
+        initialValues={{
+          firstName: contact.firstName || '',
+          lastName: contact.lastName || '',
+          email: contact.email || '',
+          phone: contact.phone || '',
+          avatar: contact.avatar || '',
+        }}
       >
-        <Form.Item name="firstName" label="Имя" rules={[{ required: true, message: "Введите имя" }]}>
-          <Input placeholder="Имя" />
+        <Form.Item
+          label="Имя"
+          name="firstName"
+          rules={[{ required: true, message: 'Введите имя' }]}
+        >
+          <Input />
         </Form.Item>
 
-        <Form.Item name="lastName" label="Фамилия" rules={[{ required: true, message: "Введите фамилию" }]}>
-          <Input placeholder="Фамилия" />
+        <Form.Item
+          label="Фамилия"
+          name="lastName"
+          rules={[{ required: true, message: 'Введите фамилию' }]}
+        >
+          <Input />
         </Form.Item>
 
-        <Form.Item name="email" label="Email" rules={[{ required: true, type: "email", message: "Введите корректный email" }]}>
-          <Input placeholder="Email" />
+        <Form.Item
+          label="Email"
+          name="email"
+          rules={[
+            { required: true, message: 'Введите email' },
+            { type: 'email', message: 'Неверный формат email' }
+          ]}
+        >
+          <Input />
         </Form.Item>
 
-        <Form.Item name="phone" label="Телефон" rules={[{ required: true, message: "Введите номер телефона" }]}>
-          <Input placeholder="Телефон" />
+        <Form.Item
+          label="Телефон"
+          name="phone"
+          rules={[
+            { required: true, message: 'Введите номер телефона' },
+            {
+              pattern: /^\+?[0-9]{7,10}$/,
+              message: 'Неверный формат телефона'
+            }
+          ]}
+        >
+          <Input />
         </Form.Item>
 
-        <Form.Item name="avatar" label="URL аватара">
-          <Input placeholder="https://..." />
-        </Form.Item>
-
-        <Form.Item style={{ textAlign: "right" }}>
-          <Button onClick={onClose} style={{ marginRight: 8 }}>
-            Отмена
-          </Button>
-          <Button type="primary" htmlType="submit">
-            {contact.id ? "Сохранить" : "Добавить"}
-          </Button>
+        <Form.Item
+          label="URL аватара"
+          name="avatar"
+          rules={[
+            { required: true, message: 'Введите ссылку на аватар' },
+            {
+              type: 'url',
+              message: 'Введите корректный URL (например: https://example.com/avatar.jpg)',
+            },
+            {
+              pattern: /\.(jpeg|jpg|png|gif|webp)$/i,
+              message: 'Ссылка должна оканчиваться на .jpg, .jpeg, .png, .gif или .webp',
+            }
+          ]}
+        >
+          <Input />
         </Form.Item>
       </Form>
     </Modal>
